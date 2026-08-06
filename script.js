@@ -258,37 +258,81 @@ function removeLogo() {
 
 function valorPorExtenso(valor) {
     if (valor === 0) return 'ZERO REAIS';
+
     const unidades = ['', 'UM', 'DOIS', 'TRÊS', 'QUATRO', 'CINCO', 'SEIS', 'SETE', 'OITO', 'NOVE'];
     const dezenas = ['', 'DEZ', 'VINTE', 'TRINTA', 'QUARENTA', 'CINQUENTA', 'SESSENTA', 'SETENTA', 'OITENTA', 'NOVENTA'];
     const centenas = ['', 'CENTO', 'DUZENTOS', 'TREZENTOS', 'QUATROCENTOS', 'QUINHENTOS', 'SEISCENTOS', 'SETECENTOS', 'OITOCENTOS', 'NOVECENTOS'];
-    const especiais = {10: 'DEZ', 11: 'ONZE', 12: 'DOZE', 13: 'TREZE', 14: 'QUATORZE', 15: 'QUINZE', 16: 'DEZESSEIS', 17: 'DEZESSETE', 18: 'DEZOITO', 19: 'DEZENOVE'};
+    const especiais = {
+        10: 'DEZ', 11: 'ONZE', 12: 'DOZE', 13: 'TREZE', 14: 'QUATORZE',
+        15: 'QUINZE', 16: 'DEZESSEIS', 17: 'DEZESSETE', 18: 'DEZOITO', 19: 'DEZENOVE'
+    };
 
     function converterNumero(num) {
         if (num === 0) return '';
         if (num === 1) return 'UM';
-        if (num === 100) return 'CEM';
+        if (num === 100) return 'CEM'; // "CEM" isolado
+
         let resultado = '';
+
+        // Milhares
         if (num >= 1000) {
             const milhar = Math.floor(num / 1000);
-            resultado += (milhar === 1 ? 'MIL ' : converterNumero(milhar) + ' MIL ');
+            if (milhar === 1) {
+                resultado += 'MIL ';
+            } else {
+                resultado += converterNumero(milhar) + ' MIL ';
+            }
             num %= 1000;
+            
+            // Se ainda houver resto, adiciona "E" antes
+            if (num > 0) {
+                resultado += 'E ';
+            }
         }
-        if (num >= 100) { resultado += centenas[Math.floor(num / 100)] + ' '; num %= 100; }
-        if (num >= 10 && num <= 19) return (resultado + especiais[num]).trim();
+
+        // Centenas
+        if (num >= 100) {
+            const centena = Math.floor(num / 100);
+            if (num === 100) {
+                resultado += 'CEM '; // "CEM" após "MIL E"
+            } else {
+                resultado += centenas[centena] + ' ';
+            }
+            num %= 100;
+        }
+
+        // Especiais (10-19)
+        if (num >= 10 && num <= 19) {
+            resultado += especiais[num] + ' ';
+            return resultado.trim();
+        }
+
+        // Dezenas
         if (num >= 20) {
-            resultado += dezenas[Math.floor(num / 10)] + ' ';
+            const dezena = Math.floor(num / 10);
+            resultado += dezenas[dezena] + ' ';
             num %= 10;
-            if (num > 0) resultado += 'E ';
+            if (num > 0) {
+                resultado += 'E ';
+            }
         }
-        if (num > 0) resultado += unidades[num] + ' ';
+
+        // Unidades
+        if (num > 0) {
+            resultado += unidades[num] + ' ';
+        }
+
         return resultado.trim();
     }
 
     const partes = valor.toFixed(2).split('.');
     const reais = parseInt(partes[0]);
     const centavos = parseInt(partes[1]);
+
     let extenso = converterNumero(reais) + ' REAIS';
-    if (centavos > 0) extenso += ' E ' + converterNumero(centavos) + ' CENTAVOS';
+    if (centavos > 0) {
+        extenso += ' E ' + converterNumero(centavos) + ' CENTAVOS';
+    }
     return extenso;
 }
 
