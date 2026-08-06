@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<!-- By Cleidson Neves -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Recibos - DevRec</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✦ Sistema de Recibos</h1>
+            <p id="headerEmpresaNome">DevRec • Gestão Inteligente de Documentos</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('create', this)">📝 Criar Recibo</button>
+                <button class="tab" onclick="showTab('empresa', this)">🏢 Cadastro Empresa</button>
+                <button class="tab" onclick="showTab('spreadsheet', this)">📊 Planilha</button>
+                <button class="tab" onclick="showTab('report', this)">📈 Relatórios</button>
+            </div>
+
+            <!-- Aba de Criação de Recibo -->
+            <div id="createTab" class="tab-content">
+                <div class="form-section">
+                    <div class="form-section-title">Configuração do Recibo</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de Recibo</label>
+                            <select id="reciboType" onchange="updateReciboForm()">
+                                <option value="premiacao">🏆 Recibo de Premiação</option>
+                                <option value="pagamento">💰 Recibo de Pagamento</option>
+                                <option value="adiantamento">💳 Recibo de Adiantamento</option>
+                                <option value="reembolso">🔄 Recibo de Reembolso</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Forma de Pagamento</label>
+                            <select id="formaPagamento">
+                                <option value="transferencia">🏦 Transferência bancária</option>
+                                <option value="dinheiro">💵 Dinheiro</option>
+                                <option value="cartao">💳 Cartão</option>
+                                <option value="pix">📱 PIX</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Identidade da Empresa</div>
+                    
+                    <div class="form-group">
+                        <label>Logo da Empresa (opcional)</label>
+                        <div class="logo-upload-area">
+                            <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)">
+                            <label for="logoUpload" class="logo-upload-label">
+                                🖼️ Arraste ou clique para fazer upload do logo
+                            </label>
+                            <p style="font-size: 12px; color: #71717a; margin-top: 6px;">Formatos: JPG, PNG, GIF • Máx: 2MB</p>
+                            <img id="logoPreviewSmall" class="logo-preview-small" style="display: none;">
+                            <button type="button" class="btn btn-danger btn-sm" style="margin-top: 12px; display: none;" 
+                                    id="removeLogoBtn" onclick="removeLogo()">
+                                ✕ Remover Logo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Dados do Recebedor</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" id="nomeRecebedor" value="Cleidson Neves" placeholder="Nome do recebedor" required>
+                        </div>
+                        <div class="form-group">
+                            <label>CPF</label>
+                            <input type="text" id="cpfRecebedor" value="000.000.000-00" placeholder="000.000.000-00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Valor (R$)</label>
+                            <input type="number" id="valorRecibo" step="0.01" min="0" value="2817.20" oninput="updateValorExtenso()" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor por Extenso</label>
+                            <input type="text" id="valorExtenso" readonly style="background: #1a1a24; color: #6c5ce7; font-weight: 600;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Referente a</label>
+                        <textarea id="referente" rows="2">premiação concedida por meta atingida, conforme critérios internos da empresa</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data do Recibo</label>
+                            <input type="date" id="dataRecibo" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observações Adicionais</label>
+                        <textarea id="observacoes" rows="3">Declaro estar ciente de que este valor tem caráter premial, não se incorporando ao salário nem gerando quaisquer direitos trabalhistas, previdenciários ou fundiários, conforme previsto no artigo 457, §4º da CLT.</textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="gerarRecibo()">👁️ Visualizar Recibo</button>
+                    <button class="btn btn-success" onclick="salvarRecibo()">💾 Salvar na Planilha</button>
+                    <button class="btn btn-info" onclick="imprimirRecibo()">🖨️ Imprimir</button>
+                </div>
+
+                <div class="recibo-preview" id="reciboPreview">
+                    <div class="recibo-content" id="reciboContent"></div>
+                </div>
+            </div>
+
+            <!-- Aba de Cadastro da Empresa -->
+            <div id="empresaTab" class="tab-content" style="display: none;">
+                <div class="form-section">
+                    <div class="form-section-title">🏢 Cadastro da Empresa</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome da Empresa</label>
+                            <input type="text" id="empresaNome" placeholder="Nome da empresa">
+                        </div>
+                        <div class="form-group">
+                            <label>CNPJ</label>
+                            <input type="text" id="empresaCnpj" placeholder="00.000.000/0000-00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Endereço Completo</label>
+                        <input type="text" id="empresaEndereco" placeholder="Endereço completo">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Responsável</label>
+                            <input type="text" id="empresaResponsavel" placeholder="Nome do responsável">
+                        </div>
+                        <div class="form-group">
+                            <label>Cargo do Responsável</label>
+                            <input type="text" id="empresaCargo" placeholder="Cargo">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="text" id="empresaTelefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="empresaEmail" placeholder="email@empresa.com.br">
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="salvarEmpresa()">💾 Salvar Empresa</button>
+                        <button class="btn btn-warning" onclick="limparFormularioEmpresa()">🔄 Limpar</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">📋 Empresas Cadastradas</div>
+                    
+                    <div class="empresa-table-wrapper">
+                        <table class="empresa-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CNPJ</th>
+                                    <th>Responsável</th>
+                                    <th>Cargo</th>
+                                    <th>Telefone</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empresaTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:30px;">📭 Nenhuma empresa cadastrada</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba da Planilha -->
+            <div id="spreadsheetTab" class="tab-content" style="display: none;">
+                <div class="spreadsheet-section">
+                    <div class="form-section-title">📊 Base de Dados - Planilha de Recibos</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-value" id="totalRecibos">0</div>
+                            <div class="stat-label">Total de Recibos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value" id="valorTotal">R$ 0,00</div>
+                            <div class="stat-label">Valor Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-value" id="ultimoRecibo">-</div>
+                            <div class="stat-label">Último Recibo</div>
+                        </div>
+                    </div>
+
+                    <div class="spreadsheet-actions">
+                        <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
+                        <button class="btn btn-primary file-input-wrapper">📤 Importar CSV
+                            <input type="file" id="importCSV" accept=".csv" onchange="importarCSV(event)">
+                        </button>
+                        <button class="btn btn-warning" onclick="limparPlanilha()">🗑️ Limpar Planilha</button>
+                        <button class="btn btn-info" onclick="atualizarVisualizacaoPlanilha()">🔄 Atualizar</button>
+                    </div>
+
+                    <div class="spreadsheet-table-wrapper">
+                        <table class="spreadsheet-table" id="spreadsheetTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Valor (R$)</th>
+                                    <th>Referente</th>
+                                    <th>Forma Pagamento</th>
+                                    <th>Data Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spreadsheetBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Relatórios -->
+            <div id="reportTab" class="tab-content" style="display: none;">
+                <div class="report-section report-print-area">
+                    <div class="form-section-title">📈 Relatório de Recibos</div>
+                    
+                    <div class="report-filters">
+                        <div class="form-group">
+                            <label>Data Inicial</label>
+                            <input type="date" id="filterDataInicio" onchange="gerarRelatorio()">
+                        </div>
+                        <div class="form-group">
+                            <label>Data Final</label>
+                            <input type="date" id="filterDataFim" onchange="gerarRelatorio()">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Recibo</label>
+                            <select id="filterTipo" onchange="gerarRelatorio()">
+                                <option value="todos">Todos</option>
+                                <option value="premiacao">Premiação</option>
+                                <option value="pagamento">Pagamento</option>
+                                <option value="adiantamento">Adiantamento</option>
+                                <option value="reembolso">Reembolso</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-primary" onclick="gerarRelatorio()">🔍 Filtrar</button>
+                            <button class="btn btn-info" onclick="imprimirRelatorio()" style="margin-left: 10px;">🖨️ Imprimir Relatório</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" id="reportStats">
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-value" id="rTotalRecibos">0</div>
+                            <div class="stat-label">Recibos no Período</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💵</div>
+                            <div class="stat-value" id="rValorTotal">R$ 0,00</div>
+                            <div class="stat-label">Valor Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-value" id="rMediaValor">R$ 0,00</div>
+                            <div class="stat-label">Valor Médio</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-value" id="rMaiorValor">R$ 0,00</div>
+                            <div class="stat-label">Maior Valor</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">📊 Distribuição por Tipo de Recibo</div>
+                        <div class="bar-chart" id="chartPorTipo"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">📅 Valor Total por Mês</div>
+                        <div class="bar-chart" id="chartPorMes"></div>
+                    </div>
+
+                    <div class="report-table-wrapper">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Valor</th>
+                                    <th>Forma Pagamento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="report-summary">
+                        <div class="chart-title">📋 Resumo do Período</div>
+                        <div class="summary-grid">
+                            <div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Total de Recibos:</span>
+                                    <span class="summary-value" id="sTotalRecibos">0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Valor Total:</span>
+                                    <span class="summary-value" id="sValorTotal">R$ 0,00</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Valor Médio:</span>
+                                    <span class="summary-value" id="sMediaValor">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Maior Valor:</span>
+                                    <span class="summary-value" id="sMaiorValor">R$ 0,00</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Menor Valor:</span>
+                                    <span class="summary-value" id="sMenorValor">R$ 0,00</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Período:</span>
+                                    <span class="summary-value" id="sPeriodo">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
